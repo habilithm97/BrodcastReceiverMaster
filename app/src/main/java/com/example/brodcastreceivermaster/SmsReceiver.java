@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /*
@@ -27,6 +28,8 @@ import java.util.Date;
 
 public class SmsReceiver extends BroadcastReceiver {
 
+    public SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     private static final String TAG = "SmsReceiver";
 
     @Override // SMS를 받으면 자동 호출됨
@@ -43,9 +46,22 @@ public class SmsReceiver extends BroadcastReceiver {
             String contents = messages[0].getMessageBody(); // 메시지 내용
             Log.i(TAG, "SMS 내용 : " + contents);
 
-            Date receivedDate = new Date(messages[0].getTimestampMillis()); // 발신시각
-            Log.i(TAG, "SMS 발신시각 : " + receivedDate);
+            Date date = new Date(messages[0].getTimestampMillis()); // 발신시각
+            Log.i(TAG, "SMS 발신시각 : " + date);
+
+            sendToActivity(context, sender, contents, date);
         }
+    }
+
+    private void sendToActivity(Context context, String sender, String contents, Date date) {
+        Intent intent = new Intent(context, SmsActivity.class); // Sms가 오면 화면 전환함
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        intent.putExtra("sender", sender);
+        intent.putExtra("contents", contents);
+        intent.putExtra("date", dateFormat.format(date)); // 날짜값은 문자열 형식대로 변환
+
+        context.startActivity(intent); // context를 붙히면 방송 수신자에서 사용 가능
     }
 
     private SmsMessage[] parseMessage(Bundle bundle) { // Sms 데이터를 확인할 수 있는 Sms 메시지 객체 생성(이 메서드는 다른 앱에서도 재사용 쌉가능)
